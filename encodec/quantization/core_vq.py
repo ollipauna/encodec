@@ -297,9 +297,9 @@ class VectorQuantization(nn.Module):
         x = self.project_in(x)
 
         quantize, embed_ind = self._codebook(x)
-
-        if self.training:
-            quantize = x + (quantize - x).detach()
+        
+        # track gradients in inference mode as well
+        quantize = x + (quantize - x).detach()
 
         loss = torch.tensor([0.0], device=device, requires_grad=self.training)
 

@@ -1,4 +1,29 @@
-# EnCodec: High Fidelity Neural Audio Compression
+# Differentiable EnCodec: High Fidelity Neural Audio Compression
+## Gradient tracking
+
+This is a modified version of the official Encodec repo. This version uses the Straight-Through Estimator to track gradients during inference.
+
+### Why
+
+The official version disconnects the computational graph for efficiency reasons. This version allows for end-to-end backpropagation, enabling e.g. differentiable augmentation for audio watermarking.
+
+### Usage
+
+```
+    import torch
+    from encodec import EncodecModel
+    
+    model = EncodecModel.encodec_model_24khz()
+    x = torch.randn(1, 1, 16000, requires_grad=True)
+    x_quantized = model(x)
+
+    loss = x_quantized.mean()
+    loss.backward()
+
+    # x.grad is now defined
+```
+
+## Intro
 ![linter badge](https://github.com/facebookresearch/encodec/workflows/linter/badge.svg)
 ![tests badge](https://github.com/facebookresearch/encodec/workflows/tests/badge.svg)
 

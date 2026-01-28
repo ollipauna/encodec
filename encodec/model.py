@@ -53,7 +53,7 @@ class LMModel(nn.Module):
                 `[B, n_q, T]`.
             states: state for the streaming decoding.
             offset: offset of the current time step.
-
+  
         Returns a 3-tuple `(probabilities, new_states, new_offset)` with probabilities
         with a shape `[B, card, n_q, T]`.
 
@@ -185,8 +185,61 @@ class EncodecModel(nn.Module):
         if scale is not None:
             out = out * scale.view(-1, 1, 1)
         return out
+    
+    def _quantize_frame(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Encode and decode a frame with gradient tracking.
+        """
+        length = x.shape[-1]
+        duration = length / self.sample_rate
+        assert self.segment is None or duration <= 1e-5 + self.segment
+
+        if self.normalize:
+            mono = x.mean(dim=1, keepdim=True)
+            volume = mono.pow(2).mean(dim=2, keepdim=True).sqrt()
+            scale = 1e-8 + volume
+            x = x / scale
+            scale = scale.view(-1, 1)
+        else:
+            scale = None
+
+        emb = self.encoder(x)
+        output = self.quantizer(emb, self.frame_rate, self.bandwidth)
+        out = output.quantized
+
+        out = self.decoder(out)
+        if scale is not None:
+            out = out * scale.view(-1, 1, 1)
+        return out
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Encode and decode a audio samples with gradient tracking.
+        """
+        assert x.dim() == 3
+        _, channels, length = x.shape
+        assert channels > 0 and channels <= 2
+        segment_length = self.segment_length
+        if segment_length is None:
+            segment_length = length
+            stride = length
+        else:
+            stride = self.segment_stride  # type: ignore
+            assert stride is not None
+        
+        quantized_frames = []
+        for offset in range(0, length, stride):
+            frame = x[:, :, offset: offset + segment_length]
+            quantized_frames.append(self._quantize_frame(frame))
+
+        if segment_length is None:
+            assert len(quantized_frames) == 1
+            return quantized_frames[0]
+        
+        output =  _linear_overlap_add(quantized_frames, self.segment_stride or 1)
+        return output[:, :, :x.shape[-1]]
+    
+    def _original_forward(self, x: torch.Tensor) -> torch.Tensor:
         frames = self.encode(x)
         return self.decode(frames)[:, :, :x.shape[-1]]
 
