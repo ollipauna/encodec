@@ -10,8 +10,10 @@ def test_encodec():
     x = torch.randn(1, 1, 16000, requires_grad=True)
 
     model.eval()
-    x_quantized = model(x)
     x_org_quantized = model._original_forward(x)
+
+    model.train()
+    x_quantized = model(x)
 
     # Check that the audio reconstructions match
     assert torch.allclose(x_quantized, x_org_quantized, atol=1e-3)

@@ -1,7 +1,7 @@
 # Differentiable EnCodec: High Fidelity Neural Audio Compression
 ## Gradient tracking
 
-This is a modified version of the official Encodec repo. This version uses the Straight-Through Estimator to track gradients during inference.
+This is a modified version of the official Encodec repo. This version uses the Straight-Through Estimator to track gradients.
 
 ### Why
 
@@ -14,6 +14,7 @@ The official version disconnects the computational graph for efficiency reasons.
     from encodec import EncodecModel
     
     model = EncodecModel.encodec_model_24khz()
+    model.train()
     x = torch.randn(1, 1, 16000, requires_grad=True)
     x_quantized = model(x)
 
@@ -22,6 +23,8 @@ The official version disconnects the computational graph for efficiency reasons.
 
     # x.grad is now defined
 ```
+
+Model still has to be used in training mode, because otherwise cuda will raise an error regarding RNN backpropagation. However, the EMA codebook updates have been removed so this should be functionally similar to inference mode.
 
 ## Intro
 ![linter badge](https://github.com/facebookresearch/encodec/workflows/linter/badge.svg)
