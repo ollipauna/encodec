@@ -27,18 +27,3 @@ def test_encodec():
 
     # Check that gradients are being tracked
     assert x.grad is not None
-
-    # Check that gradient values look sensible
-    print(x.grad)
-
-    # Check that adding noise changes the gradients
-    x_other = x.detach() + (0.1**0.5) * torch.randn(1, 1, 16000)
-    x_other.requires_grad_()
-    x_quantized_other = model(x_other)
-    loss_other = torch.pow(x_quantized_other, 2).sum()
-    loss_other.backward()
-    print(torch.mean(torch.abs(x.grad - x_other.grad)))
-
-
-if __name__ == "__main__":
-    test_encodec()
