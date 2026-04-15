@@ -1,7 +1,8 @@
 # Differentiable EnCodec: High Fidelity Neural Audio Compression
 ## Gradient tracking
 
-This is a modified version of the official Encodec repo. This version uses the Straight-Through Estimator to track gradients.
+This is a modified version of the official Encodec repo. This version uses the Straight-Through Estimator to track gradients during inference.
+Pretrained models can then be used for e.g. audio watermarking augmentation.
 
 ### Why
 
