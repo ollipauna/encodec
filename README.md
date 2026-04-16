@@ -27,6 +27,12 @@ The official version disconnects the computational graph for efficiency reasons.
 
 Model still has to be used in training mode, because otherwise cuda will raise an error regarding RNN backpropagation. However, the EMA codebook updates have been removed so this should be functionally similar to inference mode.
 
+### Installation
+
+Clone the repo and install it with pip.
+
+### Below you have the contents of the README file from the official release.
+
 ## Intro
 ![linter badge](https://github.com/facebookresearch/encodec/workflows/linter/badge.svg)
 ![tests badge](https://github.com/facebookresearch/encodec/workflows/tests/badge.svg)
